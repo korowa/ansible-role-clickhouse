@@ -8,6 +8,7 @@ on:
   push:
     branches:
       - main
+      - dependabot/pip/python-packages-81a3b4436f
     paths-ignore:
       - "**.md"
 
@@ -68,6 +69,12 @@ jobs:
           python-version: 3.x
           cache: pip
           cache-dependency-path: ./requirements-test.txt
+
+      # - name: Configure docker ipv6 support
+      #   run: |
+      #     echo '{
+      #       "ipv6": true
+      #     }' | sudo tee /etc/docker/daemon.json
 
       - name: Install dependencies
         run: pip install -r requirements-test.txt

@@ -8,6 +8,67 @@
   failed_when: enable_service.failed and (not ansible_check_mode or not enable_service.msg.startswith("Could not find the requested service"))
   changed_when: enable_service.changed or enable_service.failed
 
+- name: Debug start systemd service
+  systemd:
+    name: clickhouse-server.service
+    enabled: yes
+  register: enable_service
+  # Ignore non-existing service error in check mode
+  failed_when: enable_service.failed and (not ansible_check_mode or not enable_service.msg.startswith("Could not find the requested service"))
+  changed_when: enable_service.changed or enable_service.failed
+
+- name: Debug Restart clickhouse-server
+  service:
+    name: clickhouse-server
+    state: restarted
+  register: debug_restart_result
+  ignore_errors: true
+
+- name: Debug restart output
+  debug:
+    var: debug_restart_result.stderr_lines
+
+- name: Get journalctl logs
+  command: journalctl -xeu clickhouse-server
+  register: debug_clickhouse_journal
+  ignore_errors: true
+
+- name: Debug restart output
+  debug:
+    var: debug_clickhouse_journal.stdout_lines
+
+- name: Get CH logs
+  command: tail -100 /var/log/clickhouse-server/clickhouse-server.err.log
+  register: debug_ch_logs
+  ignore_errors: true
+
+- name: Debug restart output
+  debug:
+    var: debug_ch_logs.stdout_lines
+
+- name: Get CH logs
+  command: "getent ahosts ::"
+  register: debug_ahosts
+  ignore_errors: true
+
+- name: Debug restart output
+  debug:
+    var: debug_ahosts.stdout_lines
+
+- name: Get /etc/hosts
+  shell: |
+    echo "# /etc/hosts"
+    cat /etc/hosts
+    echo "# disable ipv6"
+    cat /proc/sys/net/ipv6/conf/all/disable_ipv6
+  register: debug_hosts
+  ignore_errors: true
+
+- name: Debug restart output
+  debug:
+    var: debug_hosts.stdout_lines
+
+
 - name: Notify handlers manually
   meta: flush_handlers
 
